@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     httpOnly: true,
     secure,
     sameSite: 'lax',
-    path: '/api/auth/refresh',
+    path: '/',
     maxAge: REFRESH_TOKEN_TTL_SECONDS,
   });
   return res;
