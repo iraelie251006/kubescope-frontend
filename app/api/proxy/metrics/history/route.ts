@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
   }
   const upstream = await fetch(`${backendUrl()}/api/v1/metrics/history?range=${encodeURIComponent(range)}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Cookie: `${TOKEN_COOKIE}=${token}` },
     cache: 'no-store',
   });
   if (!upstream.ok) {
