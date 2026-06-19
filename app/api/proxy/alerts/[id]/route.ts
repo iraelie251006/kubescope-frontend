@@ -7,7 +7,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
   const upstream = await fetch(`${backendUrl()}/api/v1/alerts/${encodeURIComponent(params.id)}`, {
     method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Cookie: `${TOKEN_COOKIE}=${token}` },
   });
   return new NextResponse(null, { status: upstream.status });
 }
