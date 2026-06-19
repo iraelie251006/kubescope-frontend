@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const TOKEN_COOKIE = 'kubescope_token';
+const TOKEN_COOKIE = 'access_token';
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
