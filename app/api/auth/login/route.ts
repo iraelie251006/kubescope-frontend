@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { backendUrl, REFRESH_COOKIE, TOKEN_COOKIE } from '@/lib/api';
+import { backendUrl, parseSetCookie, REFRESH_COOKIE, TOKEN_COOKIE } from '@/lib/api';
 
-const ACCESS_TOKEN_TTL_SECONDS = 60 * 60 * 24;
-const REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 30;
+// Match backend defaults (ACCESS_EXPIRATION_MS=900000, REFRESH_EXPIRATION_MS=604800000).
+// Keep in sync if backend timings change.
+const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
+const REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 export async function POST(req: NextRequest) {
   let body: unknown;
@@ -27,22 +29,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
-  const data = (await upstream.json()) as { accessToken: string; refreshToken: string };
+  const setCookies = upstream.headers.getSetCookie();
+  const accessToken = parseSetCookie(setCookies, TOKEN_COOKIE);
+  const refreshToken = parseSetCookie(setCookies, REFRESH_COOKIE);
+
+  if (!accessToken || !refreshToken) {
+    return NextResponse.json({ error: 'Backend returned no tokens' }, { status: 502 });
+  }
 
   const res = NextResponse.json({ ok: true });
   const secure = process.env.NODE_ENV === 'production';
-  res.cookies.set(TOKEN_COOKIE, data.accessToken, {
+  res.cookies.set(TOKEN_COOKIE, accessToken, {
     httpOnly: true,
     secure,
     sameSite: 'lax',
     path: '/',
     maxAge: ACCESS_TOKEN_TTL_SECONDS,
   });
-  res.cookies.set(REFRESH_COOKIE, data.refreshToken, {
+  res.cookies.set(REFRESH_COOKIE, refreshToken, {
     httpOnly: true,
     secure,
     sameSite: 'lax',
-    path: '/',
+    path: '/api/auth/refresh',
     maxAge: REFRESH_TOKEN_TTL_SECONDS,
   });
   return res;
