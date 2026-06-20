@@ -14,8 +14,23 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-slate-900">Overview</h1>
+    <div className="space-y-7">
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-ink-500 font-medium">
+            Cluster
+          </p>
+          <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-ink-900">
+            Overview
+          </h1>
+        </div>
+        <span className="inline-flex items-center gap-1.5 text-xs text-ink-500">
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent-500">
+            <span className="absolute inset-0 rounded-full bg-accent-500 animate-ping" />
+          </span>
+          live
+        </span>
+      </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard label="Total Nodes" value={String(overview.totalNodes)} />
