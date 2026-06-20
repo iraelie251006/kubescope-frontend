@@ -9,8 +9,8 @@ export async function middleware(req: NextRequest) {
   const accessToken = req.cookies.get(TOKEN_COOKIE);
   const refreshToken = req.cookies.get(REFRESH_COOKIE);
 
-  if (pathname === '/login') {
-    if (accessToken) {
+  if (pathname === '/' || pathname === '/login') {
+    if (accessToken && pathname === '/login') {
       const url = req.nextUrl.clone();
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);
