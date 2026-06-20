@@ -2,11 +2,190 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg: 246 247 249;
+  --fg: 19 22 42;
+  --muted: 94 104 131;
+  --line: 230 233 240;
+}
+
 html,
 body {
   height: 100%;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-ink-50 text-ink-900 antialiased;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', sans-serif;
+  font-feature-settings: 'ss01', 'cv01', 'cv03';
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Reveal-on-scroll: starts hidden, animates in when .in-view is toggled by IO. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+  }
+  .reveal.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Hover lift used on cards. */
+  .lift {
+    transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.35s ease,
+      border-color 0.35s ease;
+  }
+  .lift:hover {
+    transform: translateY(-3px);
+  }
+
+  /* Animated conic gradient ring used on hero CTA. */
+  .conic-ring {
+    background-image: conic-gradient(
+      from 0deg,
+      #3b5dff,
+      #7ef0c8,
+      #3b5dff 40%,
+      #2330b8 70%,
+      #3b5dff
+    );
+    animation: spin-slow 16s linear infinite;
+  }
+
+  /* Aurora blobs used as decorative backdrop on dark sections. */
+  .aurora {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .aurora::before,
+  .aurora::after {
+    content: '';
+    position: absolute;
+    width: 50rem;
+    height: 50rem;
+    border-radius: 9999px;
+    filter: blur(80px);
+    opacity: 0.55;
+    animation: drift 18s ease-in-out infinite;
+  }
+  .aurora::before {
+    background: radial-gradient(circle at 30% 30%, #3b5dff, transparent 60%);
+    top: -18rem;
+    left: -10rem;
+  }
+  .aurora::after {
+    background: radial-gradient(circle at 70% 50%, #7ef0c8, transparent 60%);
+    bottom: -22rem;
+    right: -10rem;
+    animation-delay: -6s;
+  }
+
+  /* Decorative grid backdrop with radial fade. */
+  .bg-dot-grid {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 30%, transparent 75%);
+  }
+  .bg-dot-grid-light {
+    background-image: radial-gradient(rgba(15, 23, 42, 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+    mask-image: radial-gradient(ellipse 70% 55% at 50% 30%, black 30%, transparent 75%);
+  }
+
+  /* Headline gradient text. */
+  .gradient-text {
+    background: linear-gradient(120deg, #ffffff 0%, #bcd0ff 35%, #7ef0c8 75%, #ffffff 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-shift 12s ease infinite;
+  }
+  .gradient-text-ink {
+    background: linear-gradient(120deg, #13162a 0%, #2a3fe6 50%, #19b888 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Glass panel used on hero stat. */
+  .glass {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Shimmer bar used on skeletons / dividers. */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.18) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2.4s linear infinite;
+  }
+
+  /* Soft pulse dot. */
+  .pulse-dot {
+    position: relative;
+  }
+  .pulse-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    border: 2px solid currentColor;
+    animation: pulseRing 2.4s ease-out infinite;
+  }
+}
+
+/* Respect user motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Scrollbar: subtle, modern. */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.15);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.25);
+}
+
+/* Focus ring. */
+:focus-visible {
+  outline: 2px solid #3b5dff;
+  outline-offset: 2px;
+  border-radius: 6px;
 }
