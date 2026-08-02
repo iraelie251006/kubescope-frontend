@@ -1,6 +1,9 @@
 node_modules/
 .next/
 .git/
+.github/
+.agents/
+README.md
 .env.local
 .env*.local
 *.log
