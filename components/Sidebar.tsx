@@ -44,6 +44,13 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              // Every nav link prefetches on sight by default, so an expired
+              // session would fire five simultaneous refreshes through the
+              // middleware — the backend reads the repeats as refresh-token
+              // reuse and revokes the family. These pages are all
+              // server-rendered from live cluster data, so a warmed cache buys
+              // very little anyway.
+              prefetch={false}
               className={
                 'group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all ' +
                 (active
