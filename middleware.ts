@@ -5,22 +5,22 @@ const TOKEN_COOKIE = 'access_token';
 const REFRESH_COOKIE = 'refresh_token';
 
 /**
- * A single navigation fans out into several middleware invocations: the request
- * for the page itself, plus a speculative prefetch for every link the router
- * decides to warm up. The prefetches are what made refreshing dangerous — a
- * handful fire at once, and if each tried to renew an expired session they
- * would all present the same refresh token. The backend reads the repeats as
- * token reuse, revokes the whole family, and the user gets logged out by the
- * very mechanism meant to keep them signed in.
+ * Speculative requests must never spend the refresh token: several fire at once,
+ * they would all present the same token, and the backend reads the repeats as
+ * reuse and revokes the whole family — logging the user out by the very
+ * mechanism meant to keep them signed in.
  *
- * Only a real navigation may spend the refresh token. That leaves exactly one
- * refresh in flight per navigation, because the router issues either a document
- * request or an RSC request for the destination — never both at once.
+ * This catches browser-driven speculation (`<link rel=prefetch>`, speculation
+ * rules, prerender). It deliberately does not try to catch Next's own router
+ * prefetches: Next 14 strips `Next-Router-Prefetch` and `RSC` from the request
+ * before middleware runs, so they are indistinguishable from a real navigation
+ * here. Those are shut off at the source instead, via `prefetch={false}` on the
+ * authenticated nav links in components/Sidebar.tsx — which is why that prop is
+ * load-bearing and not a style choice.
  */
-function isPrefetch(req: NextRequest): boolean {
+function isSpeculativeRequest(req: NextRequest): boolean {
   const h = req.headers;
   return (
-    h.get('next-router-prefetch') !== null ||
     h.get('purpose') === 'prefetch' ||
     h.get('x-purpose') === 'prefetch' ||
     (h.get('sec-purpose') ?? '').includes('prefetch')
@@ -41,16 +41,6 @@ function redirectToLogin(req: NextRequest, clearSession: boolean) {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-
-  // TEMP DEBUG — remove
-  if (req.nextUrl.searchParams.has('__hdrs')) {
-    return NextResponse.json({
-      names: [...req.headers.keys()],
-      prefetch: req.headers.get('next-router-prefetch'),
-      rsc: req.headers.get('rsc'),
-      isPrefetch: isPrefetch(req),
-    });
-  }
   const accessToken = req.cookies.get(TOKEN_COOKIE);
   const refreshToken = req.cookies.get(REFRESH_COOKIE);
 
@@ -68,9 +58,9 @@ export async function middleware(req: NextRequest) {
   }
 
   // Never spend the refresh token on a guess about where the user might click.
-  // Failing a prefetch closed costs nothing: the router discards the result and
-  // the navigation that follows performs the one real refresh.
-  if (isPrefetch(req)) {
+  // Failing a speculative request closed costs nothing: the result is discarded
+  // and the navigation that follows performs the one real refresh.
+  if (isSpeculativeRequest(req)) {
     return new NextResponse(null, { status: 401 });
   }
 
