@@ -41,6 +41,16 @@ function redirectToLogin(req: NextRequest, clearSession: boolean) {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // TEMP DEBUG — remove
+  if (req.nextUrl.searchParams.has('__hdrs')) {
+    return NextResponse.json({
+      names: [...req.headers.keys()],
+      prefetch: req.headers.get('next-router-prefetch'),
+      rsc: req.headers.get('rsc'),
+      isPrefetch: isPrefetch(req),
+    });
+  }
   const accessToken = req.cookies.get(TOKEN_COOKIE);
   const refreshToken = req.cookies.get(REFRESH_COOKIE);
 
