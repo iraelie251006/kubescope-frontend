@@ -4,6 +4,19 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+// The login route already separates a rejected credential (401) from an
+// unreachable backend (502). Collapsing both into "invalid password" sends
+// people hunting for a typo when nothing is wrong with what they typed.
+function signInErrorFor(status: number): string {
+  if (status === 401) return 'Invalid email or password.';
+  if (status === 400) return 'That request looked malformed. Try again.';
+  if (status === 429) return 'Too many attempts. Wait a moment and try again.';
+  if (status >= 500) {
+    return 'KubeScope can’t reach its backend right now — this isn’t your password. Try again shortly.';
+  }
+  return `Sign-in failed unexpectedly (error ${status}).`;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -22,11 +35,14 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {
-        setError('Invalid email or password');
+        setError(signInErrorFor(res.status));
         return;
       }
       router.push('/dashboard');
       router.refresh();
+    } catch {
+      // The request never landed — offline, DNS failure, connection reset.
+      setError('Could not reach KubeScope. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -121,7 +137,9 @@ export default function LoginPage() {
           <div
             className={
               'mb-4 overflow-hidden transition-all ' +
-              (error ? 'max-h-12 opacity-100 mt-2' : 'max-h-0 opacity-0')
+              // Roomy enough for the multi-line backend-unreachable copy; the
+              // old max-h-12 clipped anything past a single line.
+              (error ? 'max-h-32 opacity-100 mt-2' : 'max-h-0 opacity-0')
             }
             role="alert"
             aria-live="polite"
